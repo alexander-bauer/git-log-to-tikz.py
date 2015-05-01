@@ -23,22 +23,26 @@ class Repository:
 \\begin{tikzpicture}
 
 {% for branch_index, branch_name in enumerate(branches) %}
-\\node[git_ref] ({{branch_name}}) at ({{branch_index * 0.5}},
+{% if branches[branch_name].commit_ids %}
+\\node[git_ref] ({{branch_name}}) at ({{branch_index}},
         {{ydist * (len(branches[branch_name].commit_ids) + 1)}}) {\\verb+{{branch_name}}+};
 
-{% for index, commit_id in enumerate(branches[primary_branch_name].commit_ids) %}
+{% for index, commit_id in enumerate(branches[branch_name].commit_ids) %}
 {% set commit = commits[commit_id] %}
 \\node[git_commit] ({{commit.id}}) at ({{branch_index * 0.5}},{{ydist * (index + 1)}}) {};
 \\node[git_commit_id] (id_{{commit.id}}) at ({{commit.id}}.center) {\\verb+{{commit.id}}+};
-\\node[git_commit_message,right,xshift=2] (message_{{commit.id}}) at ({{commit.id}}.east) {\\verb+{{commit.message}}+};
+\\node[git_commit_message,right] (message_{{commit.id}}) at ({{commit.id}}.east) {\\verb+{{commit.message}}+};
 {% endfor %}
 
+{% endif %}
 {% endfor %}
 
 
 
 {% for branch_name in branches %}
+{% if branches[branch_name].commit_ids %}
 \\draw[git_arrow] ({{branch_name}}) -- ({{branches[branch_name].commit_ids[-1]}});
+{% endif %}
 {% endfor %}
 
 {% for commit in commits.values() %}
