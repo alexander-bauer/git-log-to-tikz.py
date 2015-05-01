@@ -37,11 +37,12 @@ class Repository:
 \\end{tikzpicture}
 """, trim_blocks=True)
     def __init__(self):
-        self.commits = []
+        self.commits = {}
         self.branches = {}
 
-    def add_commit(self, commit):
-        self.commits.append(commit)
+    def add_commit(self, commit, branch=_DEFAULT_PRIMARY_BRANCH):
+        self.commits[commit.id] = commit
+        self.branches[branch].commit_ids.append(commit.id)
     def add_branch(self, branch):
         self.branches[branch.name] = branch
 
