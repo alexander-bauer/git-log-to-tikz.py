@@ -29,7 +29,7 @@ class Repository:
 
 {% for commit in commits %}
 {% for parent in commit.parents %}
-\\draw[git_arrow] ({{parent}}) -- ({{commit.id}});
+\\draw[git_arrow] ({{commit.id}}) -- ({{parent}});
 {% endfor %}
 {% endfor %}
 
