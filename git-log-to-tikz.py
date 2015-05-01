@@ -29,8 +29,7 @@ class Repository:
 
 {% for index, commit_id in enumerate(branches[branch_name].commit_ids) %}
 {% set commit = commits[commit_id] %}
-\\node[git_commit] ({{commit.id}}) at ({{branch_index * 0.5}},{{ydist * (index + 1)}}) {};
-\\node[git_commit_id] (id_{{commit.id}}) at ({{commit.id}}.center) {\\verb+{{commit.id}}+};
+\\node[git_commit] ({{commit.id}}) at ({{branch_index}},{{ydist * (index + 1)}}) {\\verb+{{commit.id}}+};
 \\node[git_commit_message,right] (message_{{commit.id}}) at ({{commit.id}}.east) {\\verb+{{commit.message}}+};
 {% endfor %}
 
