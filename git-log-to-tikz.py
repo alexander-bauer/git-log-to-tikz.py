@@ -22,14 +22,14 @@ class Repository:
 \\begin{tikzpicture}
 
 {% for index, commit in enumerate(commits) %}
-\\node[commit] ({{commit.id}}) at ({{commit.node_position * 0.5}},{{ydist * index}}) {};
-\\node[commit_id] (id_{{commit.id}}) at ({{commit.id}}.center) {\\verb+{{commit.id}}+};
-\\node[commit_message,right,xshift={{commit.message_pos}}] (message_{{commit.id}}) at ({{commit.id}}.east) {\\verb+{{commit.message}}+};
+\\node[git_commit] ({{commit.id}}) at ({{commit.node_position * 0.5}},{{ydist * index}}) {};
+\\node[git_commit_id] (id_{{commit.id}}) at ({{commit.id}}.center) {\\verb+{{commit.id}}+};
+\\node[git_commit_message,right,xshift={{commit.message_pos}}] (message_{{commit.id}}) at ({{commit.id}}.east) {\\verb+{{commit.message}}+};
 {% endfor %}
 
 {% for commit in commits %}
 {% for parent in commit.parents %}
-\\draw[->] ({{parent}}) -- ({{commit.id}});
+\\draw[git_arrow] ({{parent}}) -- ({{commit.id}});
 {% endfor %}
 {% endfor %}
 
