@@ -1,0 +1,16 @@
+\documentclass[varwidth]{standalone}
+\usepackage{tikz}
+\usetikzlibrary{shapes,arrows}
+\usepackage[active,pdftex,tightpage]{preview}
+\PreviewEnvironment[{[]}]{tikzpicture}
+
+\begin{document}
+
+\tikzset{%
+    commit/.style = {circle, draw=black, align=center, minimum size = 1.5cm},
+    commit_id/.style = {},
+    commit_message/.style = {}
+}
+\input{tikz-history}
+
+\end{document}

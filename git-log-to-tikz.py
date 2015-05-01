@@ -6,8 +6,49 @@
 # Author: Alexander Bauer <sasha@linux.com>
 
 import sys
+import os
 import re
 import json
+
+try:
+    import jinja2
+except ImportError as e:
+    print("Could not import jinja2, which is used for creating the final template: %s" % e)
+    os.exit(1)
+
+class Repository:
+    _TIKZ_PICTURE_TEMPLATE = jinja2.Template("""
+
+\\begin{tikzpicture}
+
+{% for index, commit in enumerate(commits) %}
+\\node[commit] ({{commit.id}}) at ({{commit.node_position * 0.5}},{{ydist * index}}) {};
+\\node[commit_id] (id_{{commit.id}}) at ({{commit.id}}.center) {\\verb+{{commit.id}}+};
+\\node[commit_message,right,xshift={{commit.message_pos}}] (message_{{commit.id}}) at ({{commit.id}}.east) {\\verb+{{commit.message}}+};
+{% endfor %}
+
+{% for commit in commits %}
+{% for parent in commit.parents %}
+\\draw[->] ({{parent}}) -- ({{commit.id}});
+{% endfor %}
+{% endfor %}
+
+
+\\end{tikzpicture}
+""", trim_blocks=True)
+    def __init__(self):
+        self.commits = []
+        self.branches = {}
+
+    def add_commit(self, commit):
+        self.commits.append(commit)
+    def add_branch(self, branch):
+        self.branches[branch.name] = branch
+
+    def to_tikz(self):
+        return self._TIKZ_PICTURE_TEMPLATE.render(commits = self.commits,
+                ydist = 2,
+                enumerate = enumerate)
 
 class Commit:
     # * COMMIT_ID PARENT0 PARENT1... (REF0, REF1...) Commit message
@@ -67,6 +108,10 @@ class Commit:
         else:
             return commit
 
+
+
 if __name__ == "__main__":
+    repo = Repository()
     for line in sys.stdin:
-        print(Commit.parse(line))
+        repo.add_commit(Commit.parse(line))
+    print(repo.to_tikz())
