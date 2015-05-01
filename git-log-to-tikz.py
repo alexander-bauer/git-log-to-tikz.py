@@ -17,17 +17,31 @@ except ImportError as e:
     os.exit(1)
 
 class Repository:
+    _DEFAULT_PRIMARY_BRANCH = "master"
     _TIKZ_PICTURE_TEMPLATE = jinja2.Template("""
 
 \\begin{tikzpicture}
 
-{% for index, commit in enumerate(commits) %}
-\\node[git_commit] ({{commit.id}}) at ({{commit.node_position * 0.5}},{{ydist * index}}) {};
+{% for branch_index, branch_name in enumerate(branches) %}
+\\node[git_ref] ({{branch_name}}) at ({{branch_index * 0.5}},
+        {{ydist * (len(branches[branch_name].commit_ids) + 1)}}) {\\verb+{{branch_name}}+};
+
+{% for index, commit_id in enumerate(branches[primary_branch_name].commit_ids) %}
+{% set commit = commits[commit_id] %}
+\\node[git_commit] ({{commit.id}}) at ({{branch_index * 0.5}},{{ydist * (index + 1)}}) {};
 \\node[git_commit_id] (id_{{commit.id}}) at ({{commit.id}}.center) {\\verb+{{commit.id}}+};
-\\node[git_commit_message,right,xshift={{commit.message_pos}}] (message_{{commit.id}}) at ({{commit.id}}.east) {\\verb+{{commit.message}}+};
+\\node[git_commit_message,right,xshift=2] (message_{{commit.id}}) at ({{commit.id}}.east) {\\verb+{{commit.message}}+};
 {% endfor %}
 
-{% for commit in commits %}
+{% endfor %}
+
+
+
+{% for branch_name in branches %}
+\\draw[git_arrow] ({{branch_name}}) -- ({{branches[branch_name].commit_ids[-1]}});
+{% endfor %}
+
+{% for commit in commits.values() %}
 {% for parent in commit.parents %}
 \\draw[git_arrow] ({{commit.id}}) -- ({{parent}});
 {% endfor %}
@@ -48,8 +62,15 @@ class Repository:
 
     def to_tikz(self):
         return self._TIKZ_PICTURE_TEMPLATE.render(commits = self.commits,
+                branches = self.branches,
+                primary_branch_name = self._DEFAULT_PRIMARY_BRANCH,
                 ydist = 2,
-                enumerate = enumerate)
+                enumerate = enumerate, len = len)
+
+class Branch:
+    def __init__(self, name):
+        self.name = name
+        self.commit_ids = []
 
 class Commit:
     # COMMIT_ID PARENT0 PARENT1... (REF0, REF1...) Commit message
@@ -110,6 +131,7 @@ class Commit:
 
 if __name__ == "__main__":
     repo = Repository()
+    repo.add_branch(Branch("master"))
     for line in sys.stdin:
-        repo.add_commit(Commit.parse(line))
+        repo.add_commit(Commit.parse(line), branch="master")
     print(repo.to_tikz())
