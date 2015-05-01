@@ -51,10 +51,11 @@ class Repository:
                 enumerate = enumerate)
 
 class Commit:
-    # * COMMIT_ID PARENT0 PARENT1... (REF0, REF1...) Commit message
+    # COMMIT_ID PARENT0 PARENT1... (REF0, REF1...) Commit message
     _COMMIT_ID = re.compile('^[a-f0-9]{7}[a-f0-9]*$')
-    _COMMIT_MARKER = re.compile('^\*$')
-    _TREE_SPACER = re.compile('^[|\/\\\\]$')
+    # _COMMIT_MARKER = re.compile('^\*$')
+    # _TREE_SPACER = re.compile('^[|\/\\\\]$')
+    class MalformedCommitLineError(Exception): pass
 
     def __init__(self, id, message, children=[], parents=[], refs=[]):
         self.id = id
@@ -83,22 +84,18 @@ class Commit:
         message_words = []
 
         for position, word in enumerate(line.split()):
-            if cls._COMMIT_ID.match(word):
-                # If we match something that looks like an ID, try to add it as
-                # the commit ID.
-                if commit.id == None:
+            # Match the commit ID before anything else
+            if commit.id == None:
+                if cls._COMMIT_ID.match(word):
                     commit.id = word
-                # If the ID is already set, then add it as a parent. A commit
-                # may have multiple parents.
                 else:
-                    commit.parents.append(word)
-            elif cls._COMMIT_MARKER.match(word):
-                # If we match something that identifies a 'node' in the graph,
-                # mark its position down.
-                commit.node_position = position
-            elif cls._TREE_SPACER.match(word):
-                # If we encounter a spacer, ignore it.
-                pass
+                    raise cls.MalformedCommitLineError("Could not match commit ID: %s" % word)
+
+            # Match any parent IDs
+            elif cls._COMMIT_ID.match(word):
+                commit.parents.append(word)
+
+            # Otherwise, add the words as a message
             else:
                 message_words.append(word)
 
