@@ -32,12 +32,12 @@ class Repository:
 {% set branch_offset = branch_index * 2 %}
 \\node[git_ref] ({{branch_name | replace('.', '_')}})
     at ({{branch_offset}},
-    {{ydist * (greatest_branch_length) + ydist/2 * (len(branches) - branch_index - 1)}})
+    {{ydist * len(commits) + ydist/3 * (len(branches) - branch_index - 1)}})
     {\\verb+{{branch_name}}+};
 
 {% for index, commit_id in enumerate(branch.commit_ids) %}
 {% set commit = commits[commit_id] %}
-{% set commit_ypos = ydist * (branch.total_commits - len(branch.commit_ids) + index) %}
+{% set commit_ypos = ydist * commit.history_index %}
 \\node[git_commit] ({{commit.id}}) at
     ({{branch_offset}},{{commit_ypos}})
     {\\verb+{{commit.id}}+};
@@ -84,10 +84,14 @@ class Repository:
         for branch in self.branches:
             self.read_branch(branch)
 
-        # Sort the commits.
+        # Sort the commits by their timestamp.
         self.commits = collections.OrderedDict(sorted(
             self.commits.items(), key=lambda pair: pair[1].time.timestamp()
             ))
+
+        # Assign a history index to each commit, now that they're sorted.
+        for index, commit in enumerate(self.commits.values()):
+            commit.history_index = index
 
     def read_branch(self, branchname):
         output = subprocess.check_output(
