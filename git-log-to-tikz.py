@@ -34,7 +34,7 @@ class Repository:
 {% for index, commit_id in enumerate(branches[branch_name].commit_ids) %}
 {% set commit = commits[commit_id] %}
 \\node[git_commit] ({{commit.id}}) at ({{branch_offset}},{{ydist * (index + 1)}}) {\\verb+{{commit.id}}+};
-\\node[git_commit_message,right] (message_{{commit.id}}) at ({{branch_offset + 2}},{{ydist * (index + 1)}}) {\\verb+{{commit.message}}+};
+\\node[git_commit_message,right] (message_{{commit.id}}) at ({{len(branches)*2}},{{ydist * (index + 1)}}) {\\verb+{{commit.message}}+};
 {% endfor %}
 
 {% endif %}
@@ -59,9 +59,12 @@ class Repository:
         self.commits = {}
         self.branches = collections.OrderedDict()
 
-    def add_commit(self, commit, branch=_DEFAULT_PRIMARY_BRANCH):
+    def add_commit(self, commit, branch=_DEFAULT_PRIMARY_BRANCH, allow_duplicate=False):
+        if not allow_duplicate and commit.id in self.commits:
+            return
         self.commits[commit.id] = commit
         self.branches[branch].commit_ids.append(commit.id)
+
     def add_branch(self, branch):
         self.branches[branch.name] = branch
 
