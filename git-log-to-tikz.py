@@ -8,6 +8,7 @@
 import sys
 import os
 import subprocess
+import datetime
 import re
 import json
 import argparse
@@ -84,7 +85,7 @@ class Repository:
 
     def read_branch(self, branchname):
         output = subprocess.check_output(
-                ["git", "log", "--reverse", "--format='%h %p %s'", "--no-color",
+                ["git", "log", "--reverse", "--format='%at %h %p %s'", "--no-color",
                     branchname], universal_newlines=True)
                 # universal_newlines=True)
         branch = self.branches[branchname]
@@ -119,8 +120,9 @@ class Commit:
     # _TREE_SPACER = re.compile('^[|\/\\\\]$')
     class MalformedCommitLineError(Exception): pass
 
-    def __init__(self, id, message, children=[], parents=[], refs=[]):
+    def __init__(self, id, time, message, children=[], parents=[], refs=[]):
         self.id = id
+        self.time = time
         self.message = message
 
         # Wrap elements in a list if they are not already.
@@ -142,12 +144,18 @@ class Commit:
 
     @classmethod
     def parse(cls, line):
-        commit = cls(None, None, [], [])
+        commit = cls(None, None, None, [], [])
         message_words = []
 
         for position, word in enumerate(line.split()):
-            # Match the commit ID before anything else
-            if commit.id == None:
+            # Match the time before anything else
+            if commit.time == None:
+                try:
+                    commit.time = datetime.datetime.fromtimestamp(int(word))
+                except ValueError:
+                    raise cls.MalformedCommitLineError("Could not match commit time: %s" % word)
+            # Next match the commit id
+            elif commit.id == None:
                 if cls._COMMIT_ID.match(word):
                     commit.id = word
                 else:
