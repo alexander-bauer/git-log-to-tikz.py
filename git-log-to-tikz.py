@@ -36,9 +36,13 @@ class Repository:
 
 {% for index, commit_id in enumerate(branch.commit_ids) %}
 {% set commit = commits[commit_id] %}
-{% set commit_ypos = ydist * (branch.total_commits - (len(branch.comit_ids) - index)) %}
-\\node[git_commit] ({{commit.id}}) at ({{branch_offset}},{{commit_ypos}}) {\\verb+{{commit.id}}+};
-\\node[git_commit_message,right] (message_{{commit.id}}) at ({{len(branches)*2}},{{commit_ypos}}) {\\verb+{{commit.message}}+};
+{% set commit_ypos = ydist * (branch.total_commits - len(branch.commit_ids) + index) %}
+\\node[git_commit] ({{commit.id}}) at
+    ({{branch_offset}},{{commit_ypos}})
+    {\\verb+{{commit.id}}+};
+\\node[git_commit_message,right] (message_{{commit.id}})
+    at ({{len(branches)*2}},{{commit_ypos}})
+    {\\verb+{{commit.message}}+};
 {% endfor %}
 
 {% endif %}
@@ -97,8 +101,7 @@ class Repository:
         return self._TIKZ_PICTURE_TEMPLATE.render(commits = self.commits,
                 branches = self.branches,
                 primary_branch_name = self._DEFAULT_PRIMARY_BRANCH,
-                greatest_branch_length = max(branch.total_commits +
-                    len(branch.commit_ids) for branch in
+                greatest_branch_length = max(branch.total_commits for branch in
                     self.branches.values()),
                 ydist = 2,
                 enumerate = enumerate, len = len)
