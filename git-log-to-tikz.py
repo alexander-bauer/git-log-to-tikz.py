@@ -65,7 +65,7 @@ class Repository:
 \\end{tikzpicture}
 """, trim_blocks=True)
     def __init__(self):
-        self.commits = {}
+        self.commits = collections.OrderedDict()
         self.branches = collections.OrderedDict()
 
     def add_commit(self, commit, branch=_DEFAULT_PRIMARY_BRANCH, allow_duplicate=False):
@@ -80,8 +80,14 @@ class Repository:
 
     def load_all(self):
         "Uses git commands to read commits from the repository."
+        # Read all commits from known branches.
         for branch in self.branches:
             self.read_branch(branch)
+
+        # Sort the commits.
+        self.commits = collections.OrderedDict(sorted(
+            self.commits.items(), key=lambda pair: pair[1].time.timestamp()
+            ))
 
     def read_branch(self, branchname):
         output = subprocess.check_output(
