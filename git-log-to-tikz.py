@@ -40,7 +40,7 @@ class Repository:
 
 {% for branch_name in branches %}
 {% if branches[branch_name].commit_ids %}
-\\draw[git_arrow] ({{branch_name}}) -- ({{branches[branch_name].commit_ids[-1]}});
+\\draw[git_ref_arrow] ({{branch_name}}) -- ({{branches[branch_name].commit_ids[-1]}});
 {% endif %}
 {% endfor %}
 
