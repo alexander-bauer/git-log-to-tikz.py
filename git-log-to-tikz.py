@@ -24,13 +24,13 @@ class Repository:
 
 {% for branch_index, branch_name in enumerate(branches) %}
 {% if branches[branch_name].commit_ids %}
-\\node[git_ref] ({{branch_name}}) at ({{branch_index}},
-        {{ydist * (len(branches[branch_name].commit_ids) + 1)}}) {\\verb+{{branch_name}}+};
+{% set ref_y_offset = ydist * (len(branches[branch_name].commit_ids) + 1) %}
+\\node[git_ref] ({{branch_name}}) at ({{branch_index}}, {{ref_y_offset}}) {\\verb+{{branch_name}}+};
 
 {% for index, commit_id in enumerate(branches[branch_name].commit_ids) %}
 {% set commit = commits[commit_id] %}
 \\node[git_commit] ({{commit.id}}) at ({{branch_index}},{{ydist * (index + 1)}}) {\\verb+{{commit.id}}+};
-\\node[git_commit_message,right] (message_{{commit.id}}) at ({{commit.id}}.east) {\\verb+{{commit.message}}+};
+\\node[git_commit_message,right] (message_{{commit.id}}) at ({{branch_index + 2}},{{ydist * (index + 1)}}) {\\verb+{{commit.message}}+};
 {% endfor %}
 
 {% endif %}
@@ -135,6 +135,7 @@ class Commit:
 if __name__ == "__main__":
     repo = Repository()
     repo.add_branch(Branch("master"))
+    repo.add_branch(Branch("f.graph-branches"))
     for line in sys.stdin:
         repo.add_commit(Commit.parse(line), branch="master")
     print(repo.to_tikz())
