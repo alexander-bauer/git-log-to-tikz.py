@@ -29,8 +29,10 @@ class Repository:
 {% if branches[branch_name].commit_ids %}
 {% set branch = branches[branch_name] %}
 {% set branch_offset = branch_index * 2 %}
-{% set ref_y_offset = ydist * (len(branch.commit_ids) + 1) %}
-\\node[git_ref] ({{branch_name | replace('.', '_')}}) at ({{branch_offset}}, {{ref_y_offset}}) {\\verb+{{branch_name}}+};
+\\node[git_ref] ({{branch_name | replace('.', '_')}})
+    at ({{branch_offset}},
+    {{ydist * (greatest_branch_length) + ydist/2 * (len(branches) - branch_index - 1)}})
+    {\\verb+{{branch_name}}+};
 
 {% for index, commit_id in enumerate(branch.commit_ids) %}
 {% set commit = commits[commit_id] %}
@@ -95,6 +97,9 @@ class Repository:
         return self._TIKZ_PICTURE_TEMPLATE.render(commits = self.commits,
                 branches = self.branches,
                 primary_branch_name = self._DEFAULT_PRIMARY_BRANCH,
+                greatest_branch_length = max(branch.total_commits +
+                    len(branch.commit_ids) for branch in
+                    self.branches.values()),
                 ydist = 2,
                 enumerate = enumerate, len = len)
 
