@@ -7,8 +7,11 @@
 
 import sys
 import os
+import subprocess
 import re
 import json
+import argparse
+import collections
 
 try:
     import jinja2
@@ -55,13 +58,33 @@ class Repository:
 """, trim_blocks=True)
     def __init__(self):
         self.commits = {}
-        self.branches = {}
+        self.branches = collections.OrderedDict()
 
     def add_commit(self, commit, branch=_DEFAULT_PRIMARY_BRANCH):
         self.commits[commit.id] = commit
         self.branches[branch].commit_ids.append(commit.id)
     def add_branch(self, branch):
         self.branches[branch.name] = branch
+
+    def load_all(self):
+        "Uses git commands to read commits from the repository."
+        for branch in self.branches:
+            self.read_branch(branch)
+
+    def read_branch(self, branchname):
+        output = subprocess.check_output(
+                ["git", "log", "--reverse", "--format='%h %p %s'", "--no-color",
+                    branchname], universal_newlines=True)
+                # universal_newlines=True)
+        branch = self.branches[branchname]
+        for line in output.split('\n'):
+            line = line.strip('\'')
+            try:
+                commit = Commit.parse(line)
+                if commit:
+                    self.add_commit(commit, branch=branchname)
+            except Commit.MalformedCommitLineError as e:
+                print("Skipping line in output: %s" % e)
 
     def to_tikz(self):
         return self._TIKZ_PICTURE_TEMPLATE.render(commits = self.commits,
@@ -130,12 +153,19 @@ class Commit:
         else:
             return commit
 
+def main(args):
+    repo = Repository()
+    for branch in args.branches:
+        repo.add_branch(Branch(branch))
+    # for line in sys.stdin:
+    #     repo.add_commit(Commit.parse(line), branch="master")
+    repo.load_all()
+    print(repo.to_tikz())
 
+def parse(args):
+    parser = argparse.ArgumentParser()
+    parser.add_argument('branches', type=str, nargs='+')
+    return parser.parse_args(args)
 
 if __name__ == "__main__":
-    repo = Repository()
-    repo.add_branch(Branch("master"))
-    repo.add_branch(Branch("f.graph-branches"))
-    for line in sys.stdin:
-        repo.add_commit(Commit.parse(line), branch="master")
-    print(repo.to_tikz())
+    sys.exit(main(parse(sys.argv[1:])))
