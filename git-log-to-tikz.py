@@ -27,14 +27,16 @@ class Repository:
 
 {% for branch_index, branch_name in enumerate(branches) %}
 {% if branches[branch_name].commit_ids %}
+{% set branch = branches[branch_name] %}
 {% set branch_offset = branch_index * 2 %}
-{% set ref_y_offset = ydist * (len(branches[branch_name].commit_ids) + 1) %}
+{% set ref_y_offset = ydist * (len(branch.commit_ids) + 1) %}
 \\node[git_ref] ({{branch_name | replace('.', '_')}}) at ({{branch_offset}}, {{ref_y_offset}}) {\\verb+{{branch_name}}+};
 
-{% for index, commit_id in enumerate(branches[branch_name].commit_ids) %}
+{% for index, commit_id in enumerate(branch.commit_ids) %}
 {% set commit = commits[commit_id] %}
-\\node[git_commit] ({{commit.id}}) at ({{branch_offset}},{{ydist * (index + 1)}}) {\\verb+{{commit.id}}+};
-\\node[git_commit_message,right] (message_{{commit.id}}) at ({{len(branches)*2}},{{ydist * (index + 1)}}) {\\verb+{{commit.message}}+};
+{% set commit_ypos = ydist * (branch.total_commits - (len(branch.comit_ids) - index)) %}
+\\node[git_commit] ({{commit.id}}) at ({{branch_offset}},{{commit_ypos}}) {\\verb+{{commit.id}}+};
+\\node[git_commit_message,right] (message_{{commit.id}}) at ({{len(branches)*2}},{{commit_ypos}}) {\\verb+{{commit.message}}+};
 {% endfor %}
 
 {% endif %}
@@ -60,6 +62,7 @@ class Repository:
         self.branches = collections.OrderedDict()
 
     def add_commit(self, commit, branch=_DEFAULT_PRIMARY_BRANCH, allow_duplicate=False):
+        self.branches[branch].total_commits += 1
         if not allow_duplicate and commit.id in self.commits:
             return
         self.commits[commit.id] = commit
@@ -99,6 +102,7 @@ class Branch:
     def __init__(self, name):
         self.name = name
         self.commit_ids = []
+        self.total_commits = 0
 
 class Commit:
     # COMMIT_ID PARENT0 PARENT1... (REF0, REF1...) Commit message
