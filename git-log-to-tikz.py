@@ -27,23 +27,22 @@ class Repository:
 
 {% for branch_index, branch_name in enumerate(branches) %}
 {% if branches[branch_name].commit_ids %}
+{% set branch_offset = branch_index * 2 %}
 {% set ref_y_offset = ydist * (len(branches[branch_name].commit_ids) + 1) %}
-\\node[git_ref] ({{branch_name}}) at ({{branch_index}}, {{ref_y_offset}}) {\\verb+{{branch_name}}+};
+\\node[git_ref] ({{branch_name | replace('.', '_')}}) at ({{branch_offset}}, {{ref_y_offset}}) {\\verb+{{branch_name}}+};
 
 {% for index, commit_id in enumerate(branches[branch_name].commit_ids) %}
 {% set commit = commits[commit_id] %}
-\\node[git_commit] ({{commit.id}}) at ({{branch_index}},{{ydist * (index + 1)}}) {\\verb+{{commit.id}}+};
-\\node[git_commit_message,right] (message_{{commit.id}}) at ({{branch_index + 2}},{{ydist * (index + 1)}}) {\\verb+{{commit.message}}+};
+\\node[git_commit] ({{commit.id}}) at ({{branch_offset}},{{ydist * (index + 1)}}) {\\verb+{{commit.id}}+};
+\\node[git_commit_message,right] (message_{{commit.id}}) at ({{branch_offset + 2}},{{ydist * (index + 1)}}) {\\verb+{{commit.message}}+};
 {% endfor %}
 
 {% endif %}
 {% endfor %}
 
-
-
 {% for branch_name in branches %}
 {% if branches[branch_name].commit_ids %}
-\\draw[git_ref_arrow] ({{branch_name}}) -- ({{branches[branch_name].commit_ids[-1]}});
+\\draw[git_ref_arrow] ({{branch_name | replace('.', '_')}}) -- ({{branches[branch_name].commit_ids[-1]}});
 {% endif %}
 {% endfor %}
 
