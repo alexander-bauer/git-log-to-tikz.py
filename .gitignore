@@ -3,3 +3,6 @@
 *.aux
 *.log
 *.pdf
+
+*.pkg.tar.xz
+*.pkg.tar.xz.sig
