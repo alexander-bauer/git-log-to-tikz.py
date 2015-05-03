@@ -40,3 +40,4 @@ under certain circumstances. If you encounter such a circumstance, please see th
 page][issues] and report the omission. Pull requests are welcome!
 
 [git-log-to-tikz.rb]: https://gist.github.com/hauspie/2397222
+[issues]: https://github.com/alexander-bauer/git-log-to-tikz.py/issues
