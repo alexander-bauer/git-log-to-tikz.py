@@ -20,6 +20,11 @@ except ImportError as e:
     print("Could not import jinja2, which is used for creating the final template: %s" % e)
     os.exit(1)
 
+
+_TEST_ = False
+_TEST_OBJ_ = None
+_MAKETEST_ = False
+
 class Repository:
     _DEFAULT_PRIMARY_BRANCH = "master"
     _TIKZ_PICTURE_TEMPLATE = jinja2.Template("""
@@ -86,7 +91,7 @@ class Repository:
 
         # Sort the commits by their timestamp.
         self.commits = collections.OrderedDict(sorted(
-            self.commits.items(), key=lambda pair: pair[1].time.timestamp()
+            self.commits.items(), key=lambda pair: pair[1].time
             ))
 
         # Assign a history index to each commit, now that they're sorted.
@@ -94,18 +99,33 @@ class Repository:
             commit.history_index = index
 
     def read_branch(self, branchname):
-        output = subprocess.check_output(
-                ["git", "log", "--reverse", "--format='%at %h %p %s'", "--no-color",
-                    branchname, "--"], universal_newlines=True)
+        if _TEST_:
+            output = _TEST_OBJ_["branches"][branchname]
+        else:
+            output = subprocess.check_output(
+                    ["git", "log", "--reverse", "--format='%at %h %p %s'", "--no-color",
+                        branchname, "--"], universal_newlines=True)
         branch = self.branches[branchname]
         for line in output.split('\n'):
             line = line.strip('\'')
             try:
                 commit = Commit.parse(line)
                 if commit:
-                    self.add_commit(commit, branch=branchname)
+                    if _MAKETEST_:
+                        self.add_commit(commit, branch=branchname,
+                                allow_duplicate=True)
+                    else:
+                        self.add_commit(commit, branch=branchname)
             except Commit.MalformedCommitLineError as e:
                 print("Skipping line in output: %s" % e)
+
+    def to_testfile(self):
+        test_obj = {"branches": {}}
+        for branchname, branch in self.branches.items():
+            test_obj["branches"][branchname] = '\n'.join(str(self.commits[commit_id]) for commit_id
+                    in branch.commit_ids)
+
+        return test_obj
 
     def to_tikz(self):
         return self._TIKZ_PICTURE_TEMPLATE.render(commits = self.commits,
@@ -121,6 +141,8 @@ class Branch:
         self.name = name
         self.commit_ids = []
         self.total_commits = 0
+    def __repr__(self):
+        return self.__dict__
 
 class Commit:
     # COMMIT_ID PARENT0 PARENT1... (REF0, REF1...) Commit message
@@ -149,7 +171,8 @@ class Commit:
         self.message_pos = 0
 
     def __str__(self):
-        return json.dumps(self.__dict__)
+        return "%d %s %s %s" % (self.time, self.id, " ".join(self.parents),
+                self.message)
 
     @classmethod
     def parse(cls, line):
@@ -160,7 +183,7 @@ class Commit:
             # Match the time before anything else
             if commit.time == None:
                 try:
-                    commit.time = datetime.datetime.fromtimestamp(int(word))
+                    commit.time = int(word)
                 except ValueError:
                     raise cls.MalformedCommitLineError("Could not match commit time: %s" % word)
             # Next match the commit id
@@ -185,17 +208,32 @@ class Commit:
             return commit
 
 def main(args):
+    if args.testfile:
+        global _TEST_
+        global _TEST_OBJ_
+        _TEST_ = True
+        print(args.testfile)
+        with open(args.testfile, 'r') as f:
+            _TEST_OBJ_ = json.load(f)
+    if args.maketest:
+        global _MAKETEST_
+        _MAKETEST_ = True
     repo = Repository()
     for branch in args.branches:
         repo.add_branch(Branch(branch))
     # for line in sys.stdin:
     #     repo.add_commit(Commit.parse(line), branch="master")
     repo.load_all()
-    print(repo.to_tikz())
+    if _MAKETEST_:
+        print(repo.to_testfile())
+    else:
+        print(repo.to_tikz())
 
 def parse(args):
     parser = argparse.ArgumentParser()
     parser.add_argument('branches', type=str, nargs='+')
+    parser.add_argument('--maketest', action='store_true')
+    parser.add_argument('--testfile', action='store')
     return parser.parse_args(args)
 
 if __name__ == "__main__":

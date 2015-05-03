@@ -1,0 +1,7 @@
+{
+    "branches": {
+        "master": "1430609069 c736d8d  Add master one\n1430609089 0a1cf7b c736d8d Add master two\n1430609170 eb15af6 0a1cf7b Add master three",
+        "feature1": "1430609069 c736d8d  Add master one\n1430609089 0a1cf7b c736d8d Add master two\n1430609117 b6e7c96 0a1cf7b Add feature one\n1430609240 4f0c417 b6e7c96 Add feature1 two",
+        "feature2": "1430609069 c736d8d  Add master one\n1430609089 0a1cf7b c736d8d Add master two\n1430609117 b6e7c96 0a1cf7b Add feature one\n1430609212 ef8a367 b6e7c96 Add feature2 one"
+    }
+}
