@@ -96,8 +96,7 @@ class Repository:
     def read_branch(self, branchname):
         output = subprocess.check_output(
                 ["git", "log", "--reverse", "--format='%at %h %p %s'", "--no-color",
-                    branchname], universal_newlines=True)
-                # universal_newlines=True)
+                    branchname, "--"], universal_newlines=True)
         branch = self.branches[branchname]
         for line in output.split('\n'):
             line = line.strip('\'')
